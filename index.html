@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Manoba — Nat 5 Maths</title>
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#6a79f7"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="Manoba"/>
+<link rel="apple-touch-icon" href="icon-180.png"/>
+<link rel="icon" href="icon-192.png"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f0e8;--surface:#fffdf7;--surface2:#ede8dc;--border:#d4cdc0;
+  --accent:#6a79f7;--accent2:#4a5ae0;--danger:#d94f3d;--success:#2a9d6e;
+  --text:#1a1a1a;--muted:#6b6560;
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,0,0,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+.app{position:relative;z-index:1;min-height:100vh;display:grid;grid-template-columns:200px 1fr}
+
+/* Sidebar */
+.sidebar{background:var(--surface);border-right:1.5px solid var(--border);padding:1.25rem;display:flex;flex-direction:column;gap:.4rem;position:sticky;top:0;height:100vh;overflow-y:auto}
+.s-logo{font-size:1.1rem;font-weight:700;margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:1.5px solid var(--border);display:flex;align-items:center;gap:10px}
+.s-logo svg{flex-shrink:0}
+.nav-btn{display:flex;align-items:center;gap:8px;padding:.6rem .8rem;border-radius:8px;font-size:.875rem;font-weight:600;color:var(--muted);cursor:pointer;border:none;background:none;width:100%;text-align:left;transition:all .15s}
+.nav-btn:hover{background:var(--surface2);color:var(--text)}
+.nav-btn.active{background:rgba(106,121,247,.12);color:var(--accent)}
+.s-spacer{flex:1}
+.s-seed{padding:.6rem .8rem;background:var(--surface2);border-radius:8px;font-size:.75rem;color:var(--muted);text-align:center}
+.s-seed strong{display:block;color:var(--text);font-size:.85rem;margin-bottom:2px}
+
+/* Main */
+.main{padding:2rem;max-width:720px}
+.ph{margin-bottom:2rem}
+.pt{font-size:2rem;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.ps{color:var(--muted);margin-top:.3rem;font-size:.875rem}
+
+/* Stat bar */
+.sbar{display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.spill{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.5rem .9rem;font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+.spill strong{color:var(--text);font-size:.95rem}
+
+/* Question card */
+.topic-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(106,121,247,.12);border:1px solid rgba(106,121,247,.35);color:var(--accent);border-radius:20px;padding:.3rem .85rem;font-size:.75rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-bottom:.75rem}
+.dp{display:inline-block;width:7px;height:7px;border-radius:50%;background:#8b9cf8}
+.dp.off{background:var(--border)}
+.mbadge{display:inline-flex;align-items:center;background:rgba(106,121,247,.1);border:1px solid rgba(106,121,247,.3);border-radius:10px;padding:2px 10px;font-size:.72rem;font-weight:700;color:var(--accent);margin-left:.5rem}
+.qcard{background:var(--surface);border:1.5px solid var(--border);border-radius:16px;padding:2rem;margin-bottom:1.5rem;box-shadow:0 1px 12px rgba(0,0,0,.04)}
+.qtext{font-size:1.3rem;font-weight:400;line-height:1.55;margin-bottom:1.25rem}
+.ans-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:.9rem 1.1rem;color:var(--text);font-family:monospace;font-size:1rem;outline:none;transition:border-color .2s;margin-top:1rem}
+.ans-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(106,121,247,.15)}
+.ans-input.ok{border-color:var(--success);background:rgba(52,211,153,.05)}
+.ans-input.bad{border-color:var(--danger);background:rgba(241,85,58,.05)}
+.srow{display:flex;gap:.75rem;margin-top:1.25rem;flex-wrap:wrap;align-items:center}
+.btn{border:none;border-radius:8px;padding:.75rem 1.5rem;font-size:.95rem;font-weight:700;cursor:pointer;transition:opacity .15s}
+.btn:hover{opacity:.88}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-pri{background:var(--accent);color:#fff}
+.btn-sec{background:var(--surface2);color:var(--text);border:1px solid var(--border)!important}
+.btn-ghost{background:none;border:1px solid var(--border);color:var(--muted);padding:.4rem .9rem;font-size:.8rem;border-radius:8px;cursor:pointer;transition:all .15s}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.fb{border-radius:10px;padding:.9rem 1.1rem;font-size:.9rem;font-weight:600;display:flex;align-items:center;gap:10px;margin-top:.75rem;animation:si .2s ease}
+.fb.ok{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:var(--success)}
+.fb.bad{background:rgba(241,85,58,.1);border:1px solid rgba(241,85,58,.3);color:var(--danger)}
+.hintbox{background:rgba(91,110,245,.08);border:1px solid rgba(91,110,245,.25);border-radius:8px;padding:.7rem 1rem;font-size:.875rem;color:#8b9cf8;margin-top:.75rem;line-height:1.6;animation:si .2s ease}
+.solwrap{margin-top:1.25rem;border-top:1px solid var(--border);padding-top:1.25rem;animation:si .25s ease}
+.soltitle{font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem}
+.solbody{font-size:.875rem;line-height:1.8;color:var(--text)}
+.katex-block{display:block;overflow-x:auto;padding:.35rem 0}
+@keyframes si{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+
+/* Spinner */
+.spin{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;margin:3rem auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.gen-msg{text-align:center;color:var(--muted);font-size:.9rem;margin-top:1rem}
+
+/* Progress */
+.tgrid{display:flex;flex-direction:column;gap:.85rem}
+.trow{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.1rem 1.4rem}
+.trow-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem}
+.tname{font-weight:700;font-size:.9rem}
+.tmeta{font-size:.75rem;color:var(--muted);font-family:monospace}
+.btrack{height:5px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.bfill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.16,1,.3,1)}
+.rlabel{font-size:.75rem;font-weight:700;font-family:monospace;margin-top:.35rem}
+.nodata{color:var(--muted);font-size:.8rem;font-style:italic}
+.empty{color:var(--muted);font-size:.9rem;padding:2.5rem;text-align:center;border:1px dashed var(--border);border-radius:12px}
+
+/* Topic filter */
+.tfilter{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem}
+.tfbtn{padding:.4rem .9rem;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s}
+.tfbtn:hover{border-color:var(--text);color:var(--text)}
+.tfbtn.active{background:rgba(106,121,247,.1);border-color:var(--accent);color:var(--accent)}
+
+.btn-danger{background:none;border:1px solid var(--danger);color:var(--danger);padding:.5rem 1rem;border-radius:8px;font-size:.8rem;font-weight:600;cursor:pointer;margin-top:1.5rem}
+@media(max-width:600px){
+  .sidebar{padding-bottom:calc(.5rem + env(safe-area-inset-bottom,0px))}
+  .app{grid-template-columns:1fr}
+  .sidebar{position:fixed;bottom:0;top:auto;height:auto;flex-direction:row;width:100%;border-right:none;border-top:1.5px solid var(--border);padding:.5rem;z-index:100;gap:.25rem}
+  .s-logo,.s-spacer,.s-seed{display:none}
+  .nav-btn{flex-direction:column;gap:2px;font-size:.65rem;padding:.4rem .5rem;flex:1;justify-content:center;text-align:center}
+  .main{padding:1rem 1rem 5rem}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="s-logo">
+      <svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="16" y="20" font-family="Georgia,serif" font-size="9" font-weight="700" fill="currentColor" text-anchor="middle">Nat5</text></svg>
+      Manoba
+    </div>
+    <button class="nav-btn active" id="nav-quiz" onclick="showScreen('quiz')">
+      <span>✦</span> Study
+    </button>
+    <button class="nav-btn" id="nav-progress" onclick="showScreen('progress')">
+      <span>◎</span> Progress
+    </button>
+    <div class="s-spacer"></div>
+    <div class="s-seed" id="q-count-badge">
+      <strong id="q-count">—</strong>
+      questions ready
+    </div>
+  </aside>
+
+  <main class="main" id="main-content">
+    <div class="spin"></div>
+  </main>
+</div>
+
+<script>
+// ─── Topic config ────────────────────────────────────────────────────────────
+const TOPICS = {
+  fractions:           "Fractions",
+  surds_indices:       "Surds & Indices",
+  straight_line:       "Straight Line",
+  quadratics:          "Quadratics",
+  percentages:         "Percentages",
+  systems_of_equations:"Simultaneous Equations",
+  vectors:             "Vectors",
+  volume:              "Volume",
+  algebra_expressions: "Algebra",
+  trigonometry:        "Trigonometry",
+  statistics:          "Statistics",
+  functions:           "Functions",
+  inequations:         "Inequations",
+  circle_geometry:     "Circle & Geometry",
+};
+
+// ─── State ───────────────────────────────────────────────────────────────────
+let screen = 'quiz';
+let questionBank = [];    // all generated questions
+let currentQ    = null;
+let sessionId   = Date.now();
+let stats       = {done:0,correct:0,streak:0};
+let attempts    = {};     // topic -> {done,correct}
+let showHint    = false;
+let feedback    = null;
+let solution    = null;
+let generating  = false;
+let filterTopic = null;   // for progress screen
+
+// Load persisted data
+try {
+  const saved = JSON.parse(localStorage.getItem('n5_state')||'{}');
+  if(saved.attempts) attempts = saved.attempts;
+  if(saved.stats)    stats    = saved.stats;
+  if(saved.bank)     questionBank = saved.bank;
+} catch(e){}
+
+function persist(){
+  try{ localStorage.setItem('n5_state', JSON.stringify({attempts,stats,bank:questionBank.slice(-200)})); }catch(e){}
+}
+
+// ─── KaTeX renderer ──────────────────────────────────────────────────────────
+function renderLatex(text, el){
+  if(!text){ el.textContent=''; return; }
+  text = text.replace(/\\n/g,'\n');
+  el.innerHTML='';
+  let i=0;
+  while(i < text.length){
+    if(text.slice(i,i+2)==='$$'){
+      const end=text.indexOf('$$',i+2);
+      if(end!==-1){
+        const s=document.createElement('span');
+        s.className='katex-block';
+        try{ s.innerHTML = window.katex ? window.katex.renderToString(text.slice(i+2,end),{displayMode:true,throwOnError:false}) : text.slice(i+2,end); }
+        catch(e){ s.textContent=text.slice(i+2,end); }
+        el.appendChild(s); i=end+2; continue;
+      }
+    }
+    if(text[i]==='$'){
+      const end=text.indexOf('$',i+1);
+      if(end!==-1){
+        const s=document.createElement('span');
+        try{ s.innerHTML = window.katex ? window.katex.renderToString(text.slice(i+1,end),{throwOnError:false}) : text.slice(i+1,end); }
+        catch(e){ s.textContent=text.slice(i+1,end); }
+        el.appendChild(s); i=end+1; continue;
+      }
+    }
+    let j=i+1; while(j<text.length && text[j]!=='$') j++;
+    const chunk=text.slice(i,j);
+    chunk.split('\n').forEach((line,idx,arr)=>{
+      el.appendChild(document.createTextNode(line));
+      if(idx<arr.length-1) el.appendChild(document.createElement('br'));
+    });
+    i=j;
+  }
+}
+
+// ─── Python generator ported to JS ───────────────────────────────────────────
+function rand(lo,hi,exclude=[]){
+  const choices=[];
+  for(let x=lo;x<=hi;x++) if(!exclude.includes(x)) choices.push(x);
+  return choices[Math.floor(Math.random()*choices.length)];
+}
+function choice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function pm(n){ return n>=0 ? `+ ${n}` : `- ${Math.abs(n)}`; }
+function gcd(a,b){ a=Math.abs(a);b=Math.abs(b); while(b){[a,b]=[b,a%b];} return a; }
+function simplify(n,d){ const g=gcd(Math.abs(n),Math.abs(d)); return [n/g,d/g]; }
+function fracStr(n,d){
+  const [sn,sd]=simplify(n,d);
+  if(sd===1) return `${sn}`;
+  return `\\dfrac{${sn}}{${sd}}`;
+}
+
+function genFractions(){
+  const denoms=[2,3,4,5,6,8,9];
+  const style=choice(['add','subtract','multiply','divide']);
+  const d1=choice(denoms), d2=choice(denoms.filter(x=>x!==d1));
+  const n1=rand(1,d1-1), n2=rand(1,d2-1);
+  if(style==='add'){
+    const lcd=d1*d2/gcd(d1,d2);
+    const a=n1*(lcd/d1), b=n2*(lcd/d2), sum=a+b;
+    const [sn,sd]=simplify(sum,lcd);
+    const whole=Math.floor(sn/sd), rem=sn%sd;
+    const ans = sd===1?`${sn}`: rem===0?`${whole}`: `${whole>0?whole+'\\dfrac{'+rem+'}{'+sd+'}':'\\dfrac{'+sn+'}{'+sd+'}'}`;
+    return {topic:'fractions',difficulty:1,marks:2,
+      _answer:{type:'fraction',n:sn,d:sd},
+      question:`Evaluate $\\dfrac{${n1}}{${d1}} + \\dfrac{${n2}}{${d2}}$. Give your answer in its simplest form.`,
+      solution:`Step 1: LCD $= ${lcd}$\n$\\dfrac{${a}}{${lcd}} + \\dfrac{${b}}{${lcd}} = \\dfrac{${sum}}{${lcd}}$\nStep 2: Simplify\n$= ${ans}$`,
+      hint:`Find the lowest common denominator of ${d1} and ${d2}`};
+  }
+  if(style==='subtract'){
+    const lcd=d1*d2/gcd(d1,d2);
+    let a=n1*(lcd/d1), b=n2*(lcd/d2);
+    let N1=n1,D1=d1,N2=n2,D2=d2,A=a,B=b;
+    if(A<B){[N1,N2]=[N2,N1];[D1,D2]=[D2,D1];[A,B]=[B,A];}
+    const diff=A-B; const [sn,sd]=simplify(diff,lcd);
+    return {topic:'fractions',difficulty:1,marks:2,
+      _answer:{type:'fraction',n:sn,d:sd},
+      question:`Evaluate $\\dfrac{${N1}}{${D1}} - \\dfrac{${N2}}{${D2}}$. Give your answer in its simplest form.`,
+      solution:`Step 1: LCD $= ${lcd}$\n$\\dfrac{${A}}{${lcd}} - \\dfrac{${B}}{${lcd}} = \\dfrac{${diff}}{${lcd}}$\nStep 2: Simplify\n$= ${fracStr(sn,sd)}$`,
+      hint:`Find a common denominator for ${D1} and ${D2}`};
+  }
+  if(style==='multiply'){
+    const prod_n=n1*n2, prod_d=d1*d2;
+    const [sn,sd]=simplify(prod_n,prod_d);
+    return {topic:'fractions',difficulty:1,marks:2,
+      _answer:{type:'fraction',n:sn,d:sd},
+      question:`Evaluate $\\dfrac{${n1}}{${d1}} \\times \\dfrac{${n2}}{${d2}}$. Give your answer in its simplest form.`,
+      solution:`$\\dfrac{${n1}\\times${n2}}{${d1}\\times${d2}} = \\dfrac{${prod_n}}{${prod_d}} = ${fracStr(sn,sd)}$`,
+      hint:`Multiply top × top and bottom × bottom, then simplify`};
+  }
+  const prod_n=n1*d2, prod_d=d1*n2;
+  const [sn,sd]=simplify(prod_n,prod_d);
+  return {topic:'fractions',difficulty:2,marks:2,
+    _answer:{type:'fraction',n:sn,d:sd},
+    question:`Evaluate $\\dfrac{${n1}}{${d1}} \\div \\dfrac{${n2}}{${d2}}$. Give your answer in its simplest form.`,
+    solution:`Step 1: Multiply by the reciprocal\n$\\dfrac{${n1}}{${d1}} \\times \\dfrac{${d2}}{${n2}} = \\dfrac{${prod_n}}{${prod_d}}$\nStep 2: Simplify\n$= ${fracStr(sn,sd)}$`,
+    hint:`Dividing by a fraction means multiplying by its reciprocal`};
+}
+
+function genSurdsSimplify(){
+  const squares=[4,9,16,25], remainders=[2,3,5,6,7,11];
+  const sq=choice(squares), rem=choice(remainders);
+  const n=sq*rem, root=Math.round(Math.sqrt(sq));
+  return {topic:'surds_indices',difficulty:1,marks:2,
+    _answer:{type:'surd',coeff:root,radicand:rem},
+    question:`Simplify $\\sqrt{${n}}$.`,
+    solution:`Step 1: Find the largest square factor\n$${n} = ${sq} \\times ${rem}$\nStep 2: Split the surd\n$\\sqrt{${sq} \\times ${rem}} = \\sqrt{${sq}} \\times \\sqrt{${rem}} = ${root}\\sqrt{${rem}}$`,
+    hint:`Look for the largest square number that divides ${n}`};
+}
+
+function genSurdsRationalise(){
+  const surds=[2,3,5,6,7,10];
+  const surd=choice(surds), mult=rand(1,5);
+  const numer=mult*surd;
+  return {topic:'surds_indices',difficulty:2,marks:2,
+    _answer:{type:'surd',coeff:mult,radicand:surd},
+    question:`Express $\\dfrac{${numer}}{\\sqrt{${surd}}}$ with a rational denominator. Give your answer in its simplest form.`,
+    solution:`Step 1: Multiply top and bottom by $\\sqrt{${surd}}$\n$\\dfrac{${numer}\\sqrt{${surd}}}{${surd}}$\nStep 2: Simplify\n$= ${mult}\\sqrt{${surd}}$`,
+    hint:`Multiply numerator and denominator by $\\sqrt{${surd}}$`};
+}
+
+function genIndices(){
+  const base=choice(['m','n','x','a','p']);
+  const style=choice(['multiply','divide','power']);
+  if(style==='multiply'){
+    const p=rand(2,6),q=rand(2,6);
+    return {topic:'surds_indices',difficulty:1,marks:2,
+      _answer:{type:'index',base,power:p+q},
+      question:`Simplify $${base}^{${p}} \\times ${base}^{${q}}$.`,
+      solution:`Add the powers: $${base}^{${p}} \\times ${base}^{${q}} = ${base}^{${p+q}}$`,
+      hint:`When multiplying same base, add the powers`};
+  }
+  if(style==='divide'){
+    const p=rand(5,10),q=rand(2,p-1);
+    return {topic:'surds_indices',difficulty:1,marks:2,
+      _answer:{type:'index',base,power:p-q},
+      question:`Simplify $\\dfrac{${base}^{${p}}}{${base}^{${q}}}$.`,
+      solution:`Subtract the powers: $${base}^{${p}-${q}} = ${base}^{${p-q}}$`,
+      hint:`When dividing same base, subtract the powers`};
+  }
+  const p=rand(2,4),q=rand(2,4);
+  return {topic:'surds_indices',difficulty:2,marks:2,
+    _answer:{type:'index',base,power:p*q},
+    question:`Simplify $(${base}^{${p}})^{${q}}$.`,
+    solution:`Multiply the powers: $(${base}^{${p}})^{${q}} = ${base}^{${p}\\times${q}} = ${base}^{${p*q}}$`,
+    hint:`When raising a power to a power, multiply the indices`};
+}
+
+function genStraightLineGradient(){
+  const x1=rand(-5,5),y1=rand(-5,5);
+  const m=rand(-4,4,[0]),dx=rand(1,4);
+  const x2=x1+dx, y2=y1+m*dx;
+  return {topic:'straight_line',difficulty:1,marks:2,
+    _answer:{type:'number',value:m},
+    question:`Find the gradient of the line joining $(${x1},\\, ${y1})$ and $(${x2},\\, ${y2})$.`,
+    solution:`$m = \\dfrac{${y2}-(${y1})}{${x2}-(${x1})} = \\dfrac{${y2-y1}}{${x2-x1}} = ${m}$`,
+    hint:`Use $m = \\dfrac{y_2 - y_1}{x_2 - x_1}$`};
+}
+
+function genStraightLineEquation(){
+  const x1=rand(-4,4),y1=rand(-6,6);
+  const m=rand(-3,3,[0]),dx=rand(1,4);
+  const x2=x1+dx, y2=y1+m*dx, c=y1-m*x1;
+  return {topic:'straight_line',difficulty:2,marks:3,
+    _answer:{type:'line',m,c},
+    question:`Find the equation of the line passing through $(${x1},\\, ${y1})$ and $(${x2},\\, ${y2})$. Give the equation in its simplest form.`,
+    solution:`Step 1: $m = \\dfrac{${y2-y1}}{${x2-x1}} = ${m}$\nStep 2: $y - (${y1}) = ${m}(x - (${x1}))$\nStep 3: $y = ${m}x ${pm(c)}$`,
+    hint:`Find gradient first, then use $y - b = m(x - a)$`};
+}
+
+function genCompletingSquare(){
+  const b=rand(-4,4,[0])*2, hb=b/2;
+  const c=rand(-10,15), adj=c-hb*hb;
+  return {topic:'quadratics',difficulty:2,marks:2,
+    _answer:{type:'completed_square',a:hb,b:adj},
+    question:`Express $x^2 ${pm(b)}x ${pm(c)}$ in the form $(x ${pm(hb)})^2 + b$.`,
+    solution:`Step 1: Half the $x$ coefficient: $${hb}$\nStep 2: $(x${pm(hb)})^2 = x^2 ${pm(b)}x ${pm(hb*hb)}$\nStep 3: $x^2${pm(b)}x${pm(c)} = (x${pm(hb)})^2 ${pm(adj)}$`,
+    hint:`Halve the coefficient of $x$ to find the number inside the bracket`};
+}
+
+function genDiscriminant(){
+  const a=rand(1,4), b=rand(-6,6,[0]);
+  const type=choice(['two','none','equal']);
+  if(type==='equal'){
+    const b2=rand(2,8,[0])*2, c2=b2*b2/4;
+    return {topic:'quadratics',difficulty:2,marks:2,
+      _answer:{type:'discriminant',nature:'equal'},
+      question:`Determine the nature of the roots of $f(x) = x^2 ${pm(b2)}x ${pm(c2)}$.`,
+      solution:`$b^2-4ac = ${b2*b2} - ${4*c2} = 0$\nDiscriminant is zero → equal roots.`,
+      hint:`Calculate $b^2-4ac$. Zero → equal roots`};
+  }
+  let c,disc,conc,nature,sign;
+  if(type==='none'){
+    const minC=Math.ceil((b*b+1)/(4*a));
+    c=rand(minC,minC+5); disc=b*b-4*a*c; nature='none'; conc='no real roots'; sign='negative';
+  } else {
+    c=rand(-5,Math.max(0,Math.floor((b*b-1)/(4*a))));
+    disc=b*b-4*a*c; nature='two'; conc='two distinct real roots'; sign='positive';
+  }
+  return {topic:'quadratics',difficulty:2,marks:2,
+    _answer:{type:'discriminant',nature},
+    question:`Determine the nature of the roots of $f(x) = ${a}x^2 ${pm(b)}x ${pm(c)}$.`,
+    solution:`$b^2-4ac = (${b})^2 - 4(${a})(${c}) = ${b*b} - ${4*a*c} = ${disc}$\nDiscriminant is ${sign} → ${conc}.`,
+    hint:`Calculate $b^2 - 4ac$. Positive → 2 real. Zero → equal. Negative → none.`};
+}
+
+function genPercentage(){
+  const original=choice([80,100,120,150,200,250,300,400,500]);
+  const pct=choice([10,15,20,25,30]);
+  const rem=100-pct, sale=original*rem/100;
+  return {topic:'percentages',difficulty:2,marks:3,
+    _answer:{type:'number',value:original},
+    question:`After a ${pct}% reduction, an item costs £${sale}. Calculate the original price.`,
+    solution:`Step 1: £${sale} represents ${rem}%\nStep 2: $1\\% = \\dfrac{${sale}}{${rem}}$\nStep 3: $100\\% = £${original}$`,
+    hint:`The sale price is ${rem}% of the original — find 1% first then multiply by 100`};
+}
+
+function genSimultaneous(){
+  const xs=rand(-4,4), ys=rand(-4,4);
+  const a1=rand(1,4),b1=rand(1,4),a2=rand(1,4),b2=rand(1,4);
+  if(a1*b2===a2*b1) return genSimultaneous();
+  const c1=a1*xs+b1*ys, c2=a2*xs+b2*ys;
+  const g=gcd(b1,b2), lcm_b=b1*b2/g;
+  const m1=lcm_b/b1, m2=lcm_b/b2;
+  return {topic:'systems_of_equations',difficulty:2,marks:3,
+    _answer:{type:'simultaneous',x:xs,y:ys},
+    question:`Solve algebraically:\n$${a1}x ${pm(b1)}y = ${c1}$\n$${a2}x ${pm(b2)}y = ${c2}$`,
+    solution:`Step 1: Multiply eq1 by ${m1}, eq2 by ${m2}\n$${a1*m1}x ${pm(b1*m1)}y = ${c1*m1}$\n$${a2*m2}x ${pm(b2*m2)}y = ${c2*m2}$\nStep 2: Subtract → $${a1*m1-a2*m2}x = ${c1*m1-c2*m2}$ → $x = ${xs}$\nStep 3: Substitute → $y = ${ys}$`,
+    hint:`Make coefficients of one variable equal, then add or subtract`};
+}
+
+function genVectors(){
+  const v=()=>[rand(-4,4),rand(-4,4),rand(-4,4)];
+  const a=v(), b=v(), k=rand(2,4);
+  const style=choice(['add','scalar']);
+  if(style==='add'){
+    const r=[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
+    return {topic:'vectors',difficulty:1,marks:2,
+      _answer:{type:'vector',components:r},
+      question:`Given $\\mathbf{a}=\\begin{pmatrix}${a[0]}\\\\${a[1]}\\\\${a[2]}\\end{pmatrix}$ and $\\mathbf{b}=\\begin{pmatrix}${b[0]}\\\\${b[1]}\\\\${b[2]}\\end{pmatrix}$, find $\\mathbf{a}+\\mathbf{b}$.`,
+      solution:`Add components:\n$\\mathbf{a}+\\mathbf{b}=\\begin{pmatrix}${r[0]}\\\\${r[1]}\\\\${r[2]}\\end{pmatrix}$`,
+      hint:`Add the corresponding components`};
+  }
+  const ka=[k*a[0],k*a[1],k*a[2]];
+  const r=[ka[0]+b[0],ka[1]+b[1],ka[2]+b[2]];
+  return {topic:'vectors',difficulty:2,marks:2,
+    _answer:{type:'vector',components:r},
+    question:`Given $\\mathbf{a}=\\begin{pmatrix}${a[0]}\\\\${a[1]}\\\\${a[2]}\\end{pmatrix}$ and $\\mathbf{b}=\\begin{pmatrix}${b[0]}\\\\${b[1]}\\\\${b[2]}\\end{pmatrix}$, find $${k}\\mathbf{a}+\\mathbf{b}$.`,
+    solution:`$${k}\\mathbf{a}=\\begin{pmatrix}${ka[0]}\\\\${ka[1]}\\\\${ka[2]}\\end{pmatrix}$\n$${k}\\mathbf{a}+\\mathbf{b}=\\begin{pmatrix}${r[0]}\\\\${r[1]}\\\\${r[2]}\\end{pmatrix}$`,
+    hint:`Multiply each component of $\\mathbf{a}$ by ${k} first, then add`};
+}
+
+function genVolume(){
+  const style=choice(['cone','sphere']);
+  if(style==='cone'){
+    const radius=choice([3,4,5,6,7,8,10]);
+    const height=choice([6,9,10,12,15]);
+    const vol=Math.round((1/3)*3.14*radius*radius*height*100)/100;
+    return {topic:'volume',difficulty:2,marks:2,
+      _answer:{type:'number',value:vol,tolerance:0.5},
+      question:`A cone has diameter ${radius*2} cm and height ${height} cm. Calculate its volume. Take $\\pi = 3.14$.`,
+      solution:`Radius $= ${radius}$ cm\n$V = \\dfrac{1}{3}\\pi r^2 h = \\dfrac{1}{3}(3.14)(${radius}^2)(${height}) = ${vol}$ cm³`,
+      hint:`Diameter ÷ 2 = radius. Then $V = \\dfrac{1}{3}\\pi r^2 h$`};
+  }
+  const r=choice([3,4,5,6,7]);
+  const vol=Math.round((4/3)*3.14*r*r*r*100)/100;
+  return {topic:'volume',difficulty:2,marks:2,
+    _answer:{type:'number',value:vol,tolerance:0.5},
+    question:`A sphere has radius ${r} cm. Calculate its volume. Take $\\pi = 3.14$.`,
+    solution:`$V = \\dfrac{4}{3}\\pi r^3 = \\dfrac{4}{3}(3.14)(${r}^3) = ${vol}$ cm³`,
+    hint:`Use $V = \\dfrac{4}{3}\\pi r^3$ from the formula sheet`};
+}
+
+function genFunctions(){
+  const style=choice(['evaluate','solve']);
+  const a=rand(1,5), b=rand(-8,8);
+  if(style==='evaluate'){
+    const x=rand(-4,4,[0]);
+    const val=a*x+b;
+    return {topic:'functions',difficulty:1,marks:2,
+      _answer:{type:'number',value:val},
+      question:`A function is defined as $f(x) = ${a}x ${pm(b)}$. Evaluate $f(${x})$.`,
+      solution:`$f(${x}) = ${a}(${x}) ${pm(b)} = ${a*x} ${pm(b)} = ${val}$`,
+      hint:`Replace every $x$ with ${x}`};
+  }
+  const k=rand(-10,20);
+  const solx=(k-b)/a;
+  if(!Number.isInteger(solx)) return genFunctions();
+  return {topic:'functions',difficulty:2,marks:2,
+    _answer:{type:'number',value:solx},
+    question:`A function is defined as $f(x) = ${a}x ${pm(b)}$. Given that $f(p) = ${k}$, find $p$.`,
+    solution:`$${a}p ${pm(b)} = ${k}$\n$${a}p = ${k-b}$\n$p = ${solx}$`,
+    hint:`Set $f(p) = ${k}$ and solve for $p$`};
+}
+
+function genAlgebra(){
+  const style=choice(['expand_single','expand_double','factorise']);
+  if(style==='expand_single'){
+    const k=rand(2,6), a=rand(1,6), b=rand(-6,6,[0]), extra=rand(1,5);
+    const xCoeff=k*a+extra;
+    return {topic:'algebra_expressions',difficulty:1,marks:2,
+      _answer:{type:'linear',xCoeff,constant:k*b},
+      question:`Expand and simplify $${k}(${a}x ${pm(b)}) + ${extra}x$.`,
+      solution:`$${k*a}x ${pm(k*b)} + ${extra}x = ${xCoeff}x ${pm(k*b)}$`,
+      hint:`Multiply every term inside the bracket by ${k}`};
+  }
+  if(style==='expand_double'){
+    const a=rand(1,3), b=rand(-5,5,[0]), c=rand(-5,5,[0]);
+    const A=a, B=a*c+b, C=b*c;
+    return {topic:'algebra_expressions',difficulty:2,marks:3,
+      _answer:{type:'quadratic',a:A,b:B,c:C},
+      question:`Expand and simplify $(${a}x ${pm(b)})(x ${pm(c)})$.`,
+      solution:`Using FOIL:\n$${A}x^2 ${pm(a*c)}x ${pm(b)}x ${pm(b*c)}$\n$= ${A}x^2 ${pm(B)}x ${pm(C)}$`,
+      hint:`Multiply each term in the first bracket by each term in the second`};
+  }
+  const r1=rand(-5,5,[0]), r2=rand(-5,5,[0,r1]);
+  const bv=-(r1+r2), cv=r1*r2;
+  return {topic:'algebra_expressions',difficulty:2,marks:2,
+    _answer:{type:'factors',roots:[-r1,-r2].sort((a,b)=>a-b)},
+    question:`Factorise $x^2 ${pm(bv)}x ${pm(cv)}$.`,
+    solution:`Find two numbers multiplying to ${cv} and adding to ${bv}: ${-r1} and ${-r2}\n$= (x ${pm(-r1)})(x ${pm(-r2)})$`,
+    hint:`Find two numbers that multiply to give ${cv} and add to give ${bv}`};
+}
+
+function genInequations(){
+  const a=rand(2,5), b=rand(-8,8), c=rand(-10,15);
+  const rhs=(c-b)/a;
+  const op=choice(['>','<']);
+  return {topic:'inequations',difficulty:2,marks:2,
+    _answer:{type:'inequation',op,rhs},
+    question:`Solve algebraically $${a}x ${pm(b)} ${op} ${c}$.`,
+    solution:`$${a}x ${op} ${c-b}$\n$x ${op} ${rhs%1===0?rhs:(Math.round(rhs*100)/100)}$`,
+    hint:`Solve like a normal equation — remember to flip the sign if dividing by a negative`};
+}
+
+function genStatistics(){
+  const n=8;
+  const data=[];
+  for(let i=0;i<n;i++) data.push(rand(10,90));
+  data.sort((a,b)=>a-b);
+  const med=(data[3]+data[4])/2;
+  const q1=(data[1]+data[2])/2;
+  const q3=(data[5]+data[6])/2;
+  const iqr=q3-q1;
+  return {topic:'statistics',difficulty:2,marks:3,
+    _answer:{type:'stats',median:med,iqr},
+    question:`A sample of data is: ${data.join(', ')}.\nCalculate the median and interquartile range.`,
+    solution:`Ordered: ${data.join(', ')}\nMedian $= \\dfrac{${data[3]}+${data[4]}}{2} = ${med}$\nQ1 $= \\dfrac{${data[1]}+${data[2]}}{2} = ${q1}$\nQ3 $= \\dfrac{${data[5]}+${data[6]}}{2} = ${q3}$\nIQR $= ${q3} - ${q1} = ${iqr}$`,
+    hint:`Order the data. Median is between 4th and 5th values. Q1 and Q3 are midpoints of lower/upper halves`};
+}
+
+const GENERATORS = [
+  genFractions, genFractions,
+  genSurdsSimplify, genSurdsRationalise, genIndices,
+  genStraightLineGradient, genStraightLineEquation,
+  genCompletingSquare, genDiscriminant,
+  genPercentage, genSimultaneous,
+  genVectors, genVolume,
+  genFunctions, genAlgebra,
+  genInequations, genStatistics,
+];
+
+function generateQuestion(topic=null){
+  let fns = GENERATORS;
+  if(topic){
+    const topicMap = {
+      fractions:[genFractions],
+      surds_indices:[genSurdsSimplify,genSurdsRationalise,genIndices],
+      straight_line:[genStraightLineGradient,genStraightLineEquation],
+      quadratics:[genCompletingSquare,genDiscriminant],
+      percentages:[genPercentage],
+      systems_of_equations:[genSimultaneous],
+      vectors:[genVectors],
+      volume:[genVolume],
+      functions:[genFunctions],
+      algebra_expressions:[genAlgebra],
+      inequations:[genInequations],
+      statistics:[genStatistics],
+    };
+    fns = topicMap[topic] || GENERATORS;
+  }
+  return choice(fns)();
+}
+
+// ─── Adaptive question picker ─────────────────────────────────────────────────
+function pickNextQuestion(){
+  // find weakest topic (highest mistake rate with > 0 attempts)
+  // or an unattempted topic
+  let worstTopic=null, worstRate=-1;
+  for(const [t,s] of Object.entries(attempts)){
+    if(s.done===0) continue;
+    const rate=s.done>0?(s.done-s.correct)/s.done:0;
+    if(rate>worstRate){ worstRate=rate; worstTopic=t; }
+  }
+  // 70% chance to drill weakest, 30% random
+  const topic = (worstTopic && Math.random()<0.7) ? worstTopic : null;
+  return generateQuestion(topic);
+}
+
+// Pre-generate a small bank
+function prefill(){
+  if(questionBank.length < 20){
+    for(let i=0;i<30;i++) questionBank.push(generateQuestion());
+    persist();
+  }
+  document.getElementById('q-count').textContent = questionBank.length;
+}
+
+// ─── Screen routing ───────────────────────────────────────────────────────────
+function showScreen(s){
+  screen=s;
+  ['quiz','progress'].forEach(id=>{
+    document.getElementById(`nav-${id}`).classList.toggle('active',id===s);
+  });
+  if(s==='quiz') renderQuiz();
+  else renderProgress();
+}
+
+// ─── Quiz screen ──────────────────────────────────────────────────────────────
+function renderQuiz(){
+  const el=document.getElementById('main-content');
+  if(!currentQ){ nextQuestion(); return; }
+  const q=currentQ;
+  el.innerHTML=`
+    <div class="ph"><div class="pt">Study session</div><div class="ps">Answer each question — adapts to your weakest topics</div></div>
+    <div class="sbar">
+      <div class="spill">Done <strong>${stats.done}</strong></div>
+      <div class="spill">Correct <strong>${stats.correct}</strong></div>
+      <div class="spill">Streak <strong>${stats.streak}</strong></div>
+      ${stats.done>0?`<div class="spill">Score <strong>${Math.round(stats.correct/stats.done*100)}%</strong></div>`:''}
+    </div>
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div class="topic-chip">
+          ${[1,2,3].map(i=>`<span class="${i<=q.difficulty?'dp':'dp off'}"></span>`).join('')}
+          <span style="margin-left:4px">${TOPICS[q.topic]||q.topic}</span>
+        </div>
+        <span class="mbadge">${q.marks} ${q.marks===1?'mark':'marks'}</span>
+      </div>
+      <div class="qcard">
+        <div class="qtext" id="qtext"></div>
+        ${!feedback && q.hint ? (showHint
+          ? `<div class="hintbox" id="hintbox"></div>`
+          : `<button class="btn-ghost" onclick="revealHint()">Show hint</button>`)
+          : ''}
+        <input class="ans-input${feedback?(feedback.correct?' ok':' bad'):''}"
+          id="ans-input" ${feedback?'disabled':''} value="${feedback?document.getElementById('ans-input')?.value||'':''}"
+          placeholder="${answerPlaceholder(q)}" autocomplete="off"
+          onkeydown="if(event.key==='Enter'&&!window._feedback) submitAnswer()"
+        />
+        ${feedback?`<div class="fb ${feedback.correct?'ok':'bad'}">${feedback.correct?'✓ Correct!':'✗ Not quite — see the worked solution below'}</div>`:''}
+        <div class="srow">
+          ${!feedback
+            ? `<button class="btn btn-pri" onclick="submitAnswer()" id="sub-btn">Submit answer</button>`
+            : `<button class="btn btn-sec" onclick="nextQuestion()">Next question →</button>
+               ${!solution?`<button class="btn-ghost" onclick="showSolution()">Show worked solution</button>`:''}`
+          }
+        </div>
+        ${solution?`<div class="solwrap"><div class="soltitle">Worked solution</div><div class="solbody" id="sol-body"></div></div>`:''}
+      </div>
+    </div>`;
+  // Render LaTeX
+  renderLatex(q.question, document.getElementById('qtext'));
+  if(showHint && q.hint) renderLatex(q.hint, document.getElementById('hintbox'));
+  if(solution) renderLatex(q.solution, document.getElementById('sol-body'));
+  // Restore answer value if feedback shown
+  if(feedback){
+    const inp=document.getElementById('ans-input');
+    if(inp) inp.value=window._lastAnswer||'';
+  } else {
+    setTimeout(()=>{ const i=document.getElementById('ans-input'); if(i) i.focus(); },50);
+  }
+}
+
+window._feedback=null;
+window._lastAnswer='';
+
+function revealHint(){ showHint=true; renderQuiz(); }
+
+function submitAnswer(){
+  const inp=document.getElementById('ans-input');
+  if(!inp||!inp.value.trim()) return;
+  const ans=inp.value.trim();
+  window._lastAnswer=ans;
+  // Simple answer checking: compare numeric parts
+  const correct=checkAnswer(currentQ, ans);
+  feedback={correct};
+  window._feedback=feedback;
+  stats.done++;
+  if(correct){ stats.correct++; stats.streak++; }
+  else { stats.streak=0; }
+  // Record attempt
+  const t=currentQ.topic;
+  if(!attempts[t]) attempts[t]={done:0,correct:0};
+  attempts[t].done++;
+  if(correct) attempts[t].correct++;
+  persist();
+  renderQuiz();
+}
+
+// ─── Answer checking ──────────────────────────────────────────────────────────
+// Each generator attaches _answer:{type,...} so we check against the known
+// exact answer rather than trying to parse the solution string.
+
+function parseNumbers(s){
+  return (s.match(/-?\d+\.?\d*/g)||[]).map(Number);
+}
+
+function checkAnswer(q, raw){
+  const ans = raw.trim().toLowerCase()
+    .replace(/\s+/g,' ')
+    .replace(/×/g,'*').replace(/÷/g,'/');
+
+  const a = q._answer;
+
+  // ── No structured answer → fall back to numeric comparison ─────────────────
+  if(!a){
+    const solNums=parseNumbers(q.solution.split('\n').pop()||q.solution);
+    const ansNums=parseNumbers(ans);
+    return ansNums.length>0 && ansNums.some(an=>solNums.some(sn=>Math.abs(an-sn)<0.05));
+  }
+
+  // ── Single number ───────────────────────────────────────────────────────────
+  if(a.type==='number'){
+    const tol=a.tolerance||0.05;
+    const nums=parseNumbers(ans);
+    return nums.some(n=>Math.abs(n-a.value)<=tol);
+  }
+
+  // ── Fraction  e.g. "3/4", "3 over 4", "0.75" ───────────────────────────────
+  if(a.type==='fraction'){
+    const {n,d}=a;
+    // exact decimal
+    const dec=n/d;
+    const nums=parseNumbers(ans);
+    if(nums.some(x=>Math.abs(x-dec)<0.01)) return true;
+    // fraction form a/b or a over b — simplify and compare
+    const fracMatch=ans.match(/(-?\d+)\s*(?:\/|over)\s*(-?\d+)/);
+    if(fracMatch){
+      const fn=parseInt(fracMatch[1]), fd=parseInt(fracMatch[2]);
+      const g=gcd(Math.abs(fn),Math.abs(fd));
+      return fn/g===n && fd/g===d;
+    }
+    // mixed number e.g. "2 1/4" or "2 and 1/4"
+    const mixMatch=ans.match(/(\d+)\s+(\d+)\s*\/\s*(\d+)/);
+    if(mixMatch){
+      const whole=parseInt(mixMatch[1]), mn=parseInt(mixMatch[2]), md=parseInt(mixMatch[3]);
+      const total=whole*md+mn;
+      const g=gcd(total,md);
+      return total/g===n && md/g===d;
+    }
+    return false;
+  }
+
+  // ── Surd  e.g. "4root3", "4√3", "4 root 3", "4 sqrt(3)" ───────────────────
+  if(a.type==='surd'){
+    const {coeff,radicand}=a;
+    // strip spaces, latex, dollar signs
+    const clean=ans.replace(/[$\\{}]/g,'').replace(/sqrt/g,'√').replace(/root/g,'√');
+    // patterns: 4√3  or  4*√3  or just √3 (coeff=1)
+    const surdMatch=clean.match(/^(-?\d*)\s*[*×]?\s*√\s*(\d+)$/);
+    if(surdMatch){
+      const c=surdMatch[1]===''||surdMatch[1]===undefined?1:parseInt(surdMatch[1]);
+      const r=parseInt(surdMatch[2]);
+      return c===coeff && r===radicand;
+    }
+    // decimal approximation — accept within 1%
+    const approx=coeff*Math.sqrt(radicand);
+    const nums=parseNumbers(ans);
+    return nums.some(n=>Math.abs(n-approx)/approx<0.01);
+  }
+
+  // ── Index  e.g. "x^9", "x9", "x to the power 9" ───────────────────────────
+  if(a.type==='index'){
+    const {base,power}=a;
+    const clean=ans.replace(/\s+/g,'');
+    // x^9 or x^{9}
+    const idxMatch=clean.match(new RegExp(`${base}\\^\\{?(\\d+)\\}?`));
+    if(idxMatch && parseInt(idxMatch[1])===power) return true;
+    // "x9" bare
+    const bareMatch=clean.match(new RegExp(`^${base}(\\d+)$`));
+    if(bareMatch && parseInt(bareMatch[1])===power) return true;
+    // "x to the power 9"
+    const wordMatch=ans.match(/to\s+the\s+(?:power\s+)?(\d+)/);
+    if(wordMatch && parseInt(wordMatch[1])===power) return true;
+    return false;
+  }
+
+  // ── Straight line  e.g. "y=2x+3", "y = 2x - 1", "2x - y + 3 = 0" ─────────
+  if(a.type==='line'){
+    const {m,c}=a;
+    const clean=ans.replace(/\s+/g,'');
+    // y = mx + c  (y=2x+3, y=2x-1, y=-2x+5)
+    const ySlopeMatch=clean.match(/^y=(-?\d+)x([+-]\d+)?$/);
+    if(ySlopeMatch){
+      const gm=parseInt(ySlopeMatch[1]);
+      const gc=ySlopeMatch[2]?parseInt(ySlopeMatch[2]):0;
+      return gm===m && gc===c;
+    }
+    // ax + by + c = 0 form  — rearrange and compare gradient
+    // mx - y + c = 0  →  y = mx + c
+    const stdMatch=clean.match(/^(-?\d*)x([+-]\d*)?y([+-]\d+)?=0$/);
+    if(stdMatch){
+      const am=stdMatch[1]===''||stdMatch[1]==='-'?(stdMatch[1]==='-'?-1:1):parseInt(stdMatch[1]);
+      // y coefficient is -1 implicitly
+      const ac=stdMatch[3]?parseInt(stdMatch[3]):0;
+      return am===m && ac===c;
+    }
+    // just check m and c appear as numbers in the answer
+    const nums=parseNumbers(ans);
+    return nums.includes(m) && nums.includes(c);
+  }
+
+  // ── Completed square  e.g. "(x+4)^2 - 1", "(x+4)²-1" ──────────────────────
+  if(a.type==='completed_square'){
+    const {a:innerA,b:adj}=a;
+    const clean=ans.replace(/\s+/g,'').replace(/²/,'^2');
+    // (x+a)^2 + b  or (x-a)^2 + b
+    const csMatch=clean.match(/\(x([+-]\d+)\)\^?2([+-]\d+)?/);
+    if(csMatch){
+      const ga=parseInt(csMatch[1]);   // sign already included: "+4" → 4, "-3" → -3
+      const gb=csMatch[2]?parseInt(csMatch[2]):0;
+      return ga===innerA && gb===adj;
+    }
+    // just check both key numbers appear
+    const nums=parseNumbers(ans);
+    return nums.includes(Math.abs(innerA)) && nums.includes(Math.abs(adj));
+  }
+
+  // ── Discriminant — accept keyword answers ───────────────────────────────────
+  if(a.type==='discriminant'){
+    const nat=a.nature;
+    const keywords={
+      two:  ['two','real','distinct','different','2 real','positive'],
+      none: ['no real','none','no roots','negative','imaginary','complex'],
+      equal:['equal','repeated','one real','double','zero'],
+    };
+    return (keywords[nat]||[]).some(kw=>ans.includes(kw));
+  }
+
+  // ── Simultaneous  e.g. "x=2, y=-1" or "x=2 y=-1" or "2,-1" ────────────────
+  if(a.type==='simultaneous'){
+    const {x,y}=a;
+    // explicit x= y= form
+    const xMatch=ans.match(/x\s*=\s*(-?\d+)/);
+    const yMatch=ans.match(/y\s*=\s*(-?\d+)/);
+    if(xMatch && yMatch){
+      return parseInt(xMatch[1])===x && parseInt(yMatch[1])===y;
+    }
+    // two numbers in order x, y
+    const nums=parseNumbers(ans);
+    if(nums.length>=2) return nums[0]===x && nums[1]===y;
+    return false;
+  }
+
+  // ── Vector  e.g. "(8,3,4)", "8,3,4", column ────────────────────────────────
+  if(a.type==='vector'){
+    const comps=a.components;
+    const nums=parseNumbers(ans);
+    // must contain all three components in any reasonable form
+    if(nums.length<3) return false;
+    // check all three appear (order matters for a vector, but allow either order
+    // for 2-component answers typed as "x,y")
+    return comps.every((c,i)=>nums[i]===c);
+  }
+
+  // ── Statistics  median and IQR ───────────────────────────────────────────────
+  if(a.type==='stats'){
+    const {median,iqr}=a;
+    const nums=parseNumbers(ans);
+    const hasMedian=nums.some(n=>Math.abs(n-median)<0.1);
+    const hasIQR=nums.some(n=>Math.abs(n-iqr)<0.1);
+    return hasMedian && hasIQR;
+  }
+
+  // ── Linear expression  e.g. "11x - 12" ──────────────────────────────────────
+  if(a.type==='linear'){
+    const {xCoeff,constant}=a;
+    const nums=parseNumbers(ans);
+    return nums.includes(xCoeff) && nums.includes(Math.abs(constant));
+  }
+
+  // ── Quadratic  e.g. "x^2 + 2x - 15" ─────────────────────────────────────────
+  if(a.type==='quadratic'){
+    const nums=parseNumbers(ans);
+    return nums.includes(Math.abs(a.b)) && nums.includes(Math.abs(a.c));
+  }
+
+  // ── Factored form  e.g. "(x+3)(x-2)", "x=3, x=-2" ───────────────────────────
+  if(a.type==='factors'){
+    const roots=a.roots; // e.g. [-2, 3]
+    const nums=parseNumbers(ans);
+    // check both roots appear as numbers in the answer
+    return roots.every(r=>nums.some(n=>Math.abs(n-r)<0.01));
+  }
+
+  // ── Inequation  e.g. "x > -5", "x>-5" ───────────────────────────────────────
+  if(a.type==='inequation'){
+    const {op,rhs}=a;
+    const nums=parseNumbers(ans);
+    const hasRHS=nums.some(n=>Math.abs(n-rhs)<0.01);
+    // check direction symbol present
+    const hasOp=ans.includes(op)||
+      (op==='>'&&(ans.includes('greater')||ans.includes('>'))) ||
+      (op==='<'&&(ans.includes('less')||ans.includes('<')));
+    return hasRHS && hasOp;
+  }
+
+  // fallback
+  const solNums=parseNumbers(q.solution.split('\n').pop()||q.solution);
+  const ansNums=parseNumbers(ans);
+  return ansNums.length>0 && ansNums.some(an=>solNums.some(sn=>Math.abs(an-sn)<0.05));
+}
+
+// ── Answer format hint shown below the input box ──────────────────────────────
+function answerPlaceholder(q){
+  const a=q._answer;
+  if(!a) return 'Type your answer…';
+  const hints={
+    number:       'e.g. 42  or  -3.5',
+    fraction:     'e.g. 3/4  or  1 1/2',
+    surd:         'e.g. 4sqrt3  or  4√3',
+    index:        'e.g. x^9',
+    line:         'e.g. y = 2x + 3',
+    completed_square: 'e.g. (x + 4)^2 - 1',
+    discriminant: 'e.g. two real roots  or  no real roots  or  equal roots',
+    simultaneous: 'e.g. x = 2, y = -1',
+    vector:       'e.g. 8, 3, 4',
+    stats:        'e.g. median = 41, IQR = 6',
+    linear:       'e.g. 5x + 3',
+    quadratic:    'e.g. 2x² + 3x - 4',
+    factors:      'e.g. (x + 3)(x - 2)',
+    inequation:   'e.g. x > 3',
+  };
+  return hints[a.type]||'Type your answer…';
+}
+
+function showSolution(){ solution=true; renderQuiz(); }
+
+function nextQuestion(){
+  feedback=null; solution=null; showHint=false;
+  window._feedback=null; window._lastAnswer='';
+  currentQ=pickNextQuestion();
+  // Replenish bank
+  if(questionBank.length<10){
+    for(let i=0;i<20;i++) questionBank.push(generateQuestion());
+    document.getElementById('q-count').textContent=questionBank.length;
+    persist();
+  }
+  renderQuiz();
+}
+
+// ─── Progress screen ──────────────────────────────────────────────────────────
+function renderProgress(){
+  const el=document.getElementById('main-content');
+  const hasData=Object.values(attempts).some(s=>s.done>0);
+  const rows=Object.entries(TOPICS).map(([key,label])=>{
+    const s=attempts[key]||{done:0,correct:0};
+    const rate=s.done>0?Math.round((s.done-s.correct)/s.done*100):null;
+    const color=rate===null?'#6b7280':rate>60?'#f1553a':rate>30?'#f59e0b':'#34d399';
+    return {key,label,s,rate,color};
+  }).sort((a,b)=>(b.rate||0)-(a.rate||0));
+
+  el.innerHTML=`
+    <div class="ph"><div class="pt">Your progress</div><div class="ps">Topics sorted by mistake rate — focus on the red ones</div></div>
+    ${!hasData
+      ? `<div class="empty">No attempts yet — complete some questions in Study to see your progress here.</div>`
+      : `<div class="tgrid">${rows.map(({key,label,s,rate,color})=>`
+        <div class="trow">
+          <div class="trow-h">
+            <div class="tname">${label}</div>
+            <div class="tmeta">${s.done>0?`${s.correct}/${s.done} correct`:'no attempts'}</div>
+          </div>
+          ${s.done>0
+            ? `<div class="btrack"><div class="bfill" style="width:${rate}%;background:${color}"></div></div>
+               <div class="rlabel" style="color:${color}">${rate}% mistake rate</div>`
+            : `<div class="nodata">Not attempted yet</div>`}
+        </div>`).join('')}
+        </div>`}
+    <button class="btn-danger" onclick="resetProgress()">Reset all progress</button>`;
+}
+
+function resetProgress(){
+  if(!confirm('Delete all progress on this device? This cannot be undone.')) return;
+  attempts={}; stats={done:0,correct:0,streak:0};
+  persist(); renderProgress();
+}
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+prefill();
+currentQ=pickNextQuestion();
+renderQuiz();
+if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
+</script>
+</body>
+</html>
