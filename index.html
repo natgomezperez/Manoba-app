@@ -179,6 +179,16 @@ function persist(){
 }
 
 // ─── KaTeX renderer ──────────────────────────────────────────────────────────
+// Readable fallback if KaTeX hasn't loaded (e.g. offline on first visit)
+function plainMath(t){
+  let o=t, prev;
+  do{ prev=o; o=o.replace(/\\[dt]?frac\{([^{}]*)\}\{([^{}]*)\}/g,'($1)/($2)'); }while(o!==prev);
+  return o.replace(/\\sqrt\{([^{}]*)\}/g,'√$1').replace(/\\times/g,'×').replace(/\\pi/g,'π')
+    .replace(/\\geq/g,'≥').replace(/\\leq/g,'≤').replace(/\\div/g,'÷').replace(/\\,/g,' ')
+    .replace(/\\mathbf\{([^{}]*)\}/g,'$1').replace(/\\(begin|end)\{pmatrix\}/g,'').replace(/\\\\/g,', ')
+    .replace(/\\cdot/g,'·').replace(/[{}]/g,'');
+}
+
 function renderLatex(text, el){
   if(!text){ el.textContent=''; return; }
   text = text.replace(/\\n/g,'\n');
@@ -190,7 +200,7 @@ function renderLatex(text, el){
       if(end!==-1){
         const s=document.createElement('span');
         s.className='katex-block';
-        try{ s.innerHTML = window.katex ? window.katex.renderToString(text.slice(i+2,end),{displayMode:true,throwOnError:false}) : text.slice(i+2,end); }
+        try{ s.innerHTML = window.katex ? window.katex.renderToString(text.slice(i+2,end),{displayMode:true,throwOnError:false}) : plainMath(text.slice(i+2,end)); }
         catch(e){ s.textContent=text.slice(i+2,end); }
         el.appendChild(s); i=end+2; continue;
       }
@@ -199,7 +209,7 @@ function renderLatex(text, el){
       const end=text.indexOf('$',i+1);
       if(end!==-1){
         const s=document.createElement('span');
-        try{ s.innerHTML = window.katex ? window.katex.renderToString(text.slice(i+1,end),{throwOnError:false}) : text.slice(i+1,end); }
+        try{ s.innerHTML = window.katex ? window.katex.renderToString(text.slice(i+1,end),{throwOnError:false}) : plainMath(text.slice(i+1,end)); }
         catch(e){ s.textContent=text.slice(i+1,end); }
         el.appendChild(s); i=end+1; continue;
       }
@@ -967,9 +977,23 @@ function resetProgress(){
 }
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
-prefill();
-currentQ=pickNextQuestion();
-renderQuiz();
+function boot(){
+  if(boot.done) return; boot.done=true;
+  prefill();
+  currentQ=pickNextQuestion();
+  renderQuiz();
+}
+if(window.katex) boot();
+else{
+  window.addEventListener('load',boot);
+  setTimeout(boot,4000); // don't hang if the CDN is blocked
+}
+// If KaTeX arrives after the first paint, redraw so maths renders properly
+(function waitKatex(n){
+  if(window.katex){ if(boot.done && screen==='quiz') renderQuiz(); return; }
+  if(n>40) return;
+  setTimeout(()=>waitKatex(n+1),250);
+})(0);
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
 </script>
 </body>
