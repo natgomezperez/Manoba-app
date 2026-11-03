@@ -1,4 +1,5 @@
 # Manoba — Nat 5 Maths Practice
+nap
 
 A free, offline-capable maths practice app for Scottish National 5 students.
 Runs entirely in the browser — no server, no login, no cost.
