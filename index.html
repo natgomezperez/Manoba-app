@@ -107,6 +107,8 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
   .nav-btn{flex-direction:column;gap:2px;font-size:.65rem;padding:.4rem .5rem;flex:1;justify-content:center;text-align:center}
   .main{padding:1rem 1rem 5rem}
 }
+.katex .katex-mathml{position:absolute!important;clip:rect(1px,1px,1px,1px);height:1px;width:1px;overflow:hidden;padding:0;border:0}
+.qfig{margin:0 0 1.1rem}.qfig svg{width:100%;max-width:440px;height:auto;display:block}
 </style>
 </head>
 <body>
@@ -200,7 +202,7 @@ function renderLatex(text, el){
       if(end!==-1){
         const s=document.createElement('span');
         s.className='katex-block';
-        try{ s.innerHTML = window.katex ? window.katex.renderToString(text.slice(i+2,end),{displayMode:true,throwOnError:false}) : plainMath(text.slice(i+2,end)); }
+        try{ s.innerHTML = window.katex ? window.katex.renderToString(text.slice(i+2,end),{displayMode:true,throwOnError:false,output:'html'}) : plainMath(text.slice(i+2,end)); }
         catch(e){ s.textContent=text.slice(i+2,end); }
         el.appendChild(s); i=end+2; continue;
       }
@@ -209,7 +211,7 @@ function renderLatex(text, el){
       const end=text.indexOf('$',i+1);
       if(end!==-1){
         const s=document.createElement('span');
-        try{ s.innerHTML = window.katex ? window.katex.renderToString(text.slice(i+1,end),{throwOnError:false}) : plainMath(text.slice(i+1,end)); }
+        try{ s.innerHTML = window.katex ? window.katex.renderToString(text.slice(i+1,end),{throwOnError:false,output:'html'}) : plainMath(text.slice(i+1,end)); }
         catch(e){ s.textContent=text.slice(i+1,end); }
         el.appendChild(s); i=end+1; continue;
       }
@@ -539,6 +541,205 @@ function genStatistics(){
     hint:`Order the data. Median is between 4th and 5th values. Q1 and Q3 are midpoints of lower/upper halves`};
 }
 
+// ─── Trigonometry generators (non-calculator, Paper 1 style) ─────────────────
+const rad=d=>d*Math.PI/180;
+
+function graphSVG({fn,ymin,ymax,yTicks=[],xTicks=[90,180,270,360],pts=[],xmax=360}){
+  const W=440,H=230,L=48,R=16,T=14,B=30;
+  const X=x=>L+(W-L-R)*x/xmax, Y=y=>T+(H-T-B)*(ymax-y)/(ymax-ymin);
+  let g='';
+  xTicks.forEach(t=>{ g+=`<line x1="${X(t)}" y1="${T}" x2="${X(t)}" y2="${H-B}" style="stroke:var(--border)" stroke-width="1" stroke-dasharray="3 3"/><text x="${X(t)}" y="${H-B+16}" text-anchor="middle" font-size="12" style="fill:var(--muted)">${t}°</text>`; });
+  yTicks.forEach(t=>{ g+=`<line x1="${L}" y1="${Y(t)}" x2="${W-R}" y2="${Y(t)}" style="stroke:var(--border)" stroke-width="1" stroke-dasharray="3 3"/><text x="${L-6}" y="${Y(t)+4}" text-anchor="end" font-size="12" style="fill:var(--muted)">${t}</text>`; });
+  let d='';
+  for(let x=0;x<=xmax;x+=2){ d+=(x===0?'M':'L')+X(x).toFixed(1)+' '+Y(fn(x)).toFixed(1)+' '; }
+  g+=`<line x1="${L}" y1="${Y(0)}" x2="${W-R+4}" y2="${Y(0)}" style="stroke:var(--text)" stroke-width="1.5"/>`;
+  g+=`<line x1="${X(0)}" y1="${T-4}" x2="${X(0)}" y2="${H-B}" style="stroke:var(--text)" stroke-width="1.5"/>`;
+  g+=`<text x="${W-R+2}" y="${Y(0)-6}" font-size="13" font-style="italic" style="fill:var(--text)">x</text><text x="${X(0)+6}" y="${T+6}" font-size="13" font-style="italic" style="fill:var(--text)">y</text>`;
+  g+=`<path d="${d}" fill="none" style="stroke:var(--accent)" stroke-width="2.5"/>`;
+  pts.forEach(p=>{
+    const px=X(p.x), py=Y(p.y), right=px>W*0.7;
+    g+=`<circle cx="${px}" cy="${py}" r="4" style="fill:var(--danger)"/><text x="${right?px-8:px+8}" y="${py-8}" text-anchor="${right?'end':'start'}" font-size="13" font-weight="700" style="fill:var(--danger)">${p.label}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="graph">${g}</svg>`;
+}
+
+function triSVG(V,sides){
+  const W=340,H=190,pad=36;
+  const xs=V.map(v=>v.x), ys=V.map(v=>v.y);
+  const minx=Math.min(...xs),maxx=Math.max(...xs),miny=Math.min(...ys),maxy=Math.max(...ys);
+  const sc=Math.min((W-2*pad)/((maxx-minx)||1),(H-2*pad)/((maxy-miny)||1));
+  const ox=(W-(maxx-minx)*sc)/2, oy=(H-(maxy-miny)*sc)/2;
+  const P=V.map(v=>({x:ox+(v.x-minx)*sc,y:oy+(v.y-miny)*sc,l:v.l}));
+  const cx=P.reduce((a,q)=>a+q.x,0)/P.length, cy=P.reduce((a,q)=>a+q.y,0)/P.length;
+  let g=`<polygon points="${P.map(q=>q.x.toFixed(1)+','+q.y.toFixed(1)).join(' ')}" fill="none" style="stroke:var(--text)" stroke-width="2"/>`;
+  P.forEach(q=>{ const dx=q.x-cx,dy=q.y-cy,len=Math.hypot(dx,dy)||1;
+    g+=`<text x="${(q.x+dx/len*14).toFixed(1)}" y="${(q.y+dy/len*14+5).toFixed(1)}" text-anchor="middle" font-size="15" font-weight="700" style="fill:var(--accent)">${q.l}</text>`; });
+  sides.forEach(sd=>{ const a=P[sd.i],b=P[sd.j]; const mx=(a.x+b.x)/2,my=(a.y+b.y)/2; const dx=mx-cx,dy=my-cy,len=Math.hypot(dx,dy)||1;
+    g+=`<text x="${(mx+dx/len*18).toFixed(1)}" y="${(my+dy/len*18+4).toFixed(1)}" text-anchor="middle" font-size="13" style="fill:var(--text)">${sd.t}</text>`; });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="triangle">${g}</svg>`;
+}
+
+function genTrigRelated(){
+  const T=[
+    {g:'\\sin 30^\\circ = 0.5', f:'\\sin', asks:[
+      {a:150,v:0.5, r:'150° is in the 2nd quadrant where sin is positive:\n$\\sin 150^\\circ=\\sin(180^\\circ-30^\\circ)=\\sin 30^\\circ=0.5$'},
+      {a:210,v:-0.5,r:'210° is in the 3rd quadrant where sin is negative:\n$\\sin 210^\\circ=-\\sin(210^\\circ-180^\\circ)=-\\sin 30^\\circ=-0.5$'},
+      {a:330,v:-0.5,r:'330° is in the 4th quadrant where sin is negative:\n$\\sin 330^\\circ=-\\sin(360^\\circ-330^\\circ)=-\\sin 30^\\circ=-0.5$'}]},
+    {g:'\\cos 60^\\circ = 0.5', f:'\\cos', asks:[
+      {a:120,v:-0.5,r:'120° is in the 2nd quadrant where cos is negative:\n$\\cos 120^\\circ=-\\cos(180^\\circ-120^\\circ)=-\\cos 60^\\circ=-0.5$'},
+      {a:240,v:-0.5,r:'240° is in the 3rd quadrant where cos is negative:\n$\\cos 240^\\circ=-\\cos(240^\\circ-180^\\circ)=-\\cos 60^\\circ=-0.5$'},
+      {a:300,v:0.5, r:'300° is in the 4th quadrant where cos is positive:\n$\\cos 300^\\circ=\\cos(360^\\circ-300^\\circ)=\\cos 60^\\circ=0.5$'}]},
+    {g:'\\tan 45^\\circ = 1', f:'\\tan', asks:[
+      {a:135,v:-1,r:'135° is in the 2nd quadrant where tan is negative:\n$\\tan 135^\\circ=-\\tan(180^\\circ-135^\\circ)=-\\tan 45^\\circ=-1$'},
+      {a:225,v:1, r:'225° is in the 3rd quadrant where tan is positive:\n$\\tan 225^\\circ=\\tan(225^\\circ-180^\\circ)=\\tan 45^\\circ=1$'},
+      {a:315,v:-1,r:'315° is in the 4th quadrant where tan is negative:\n$\\tan 315^\\circ=-\\tan(360^\\circ-315^\\circ)=-\\tan 45^\\circ=-1$'}]},
+  ];
+  const t=choice(T), ask=choice(t.asks);
+  return {topic:'trigonometry',difficulty:1,marks:1,
+    _answer:{type:'number',value:ask.v,tolerance:0.001},
+    question:`Given that $${t.g}$, state the value of $${t.f} ${ask.a}^\\circ$.`,
+    solution:ask.r,
+    hint:`Sketch the graph (or use the quadrant/CAST diagram) to see how ${ask.a}° relates to the angle you were given.`};
+}
+
+function genTrigEquation(){
+  const type=choice(['sin','cos','tan']);
+  const sign=choice([1,-1]);
+  const k=choice([2,4,6,8]);
+  const R={
+    'sin1':{v:[30,150],r:'$\\sin x^\\circ=\\dfrac{1}{2}$\nsin is positive: 1st and 2nd quadrants\n$x=30$ or $x=180-30=150$'},
+    'sin-1':{v:[210,330],r:'$\\sin x^\\circ=-\\dfrac{1}{2}$\nsin is negative: 3rd and 4th quadrants\n$x=180+30=210$ or $x=360-30=330$'},
+    'cos1':{v:[60,300],r:'$\\cos x^\\circ=\\dfrac{1}{2}$\ncos is positive: 1st and 4th quadrants\n$x=60$ or $x=360-60=300$'},
+    'cos-1':{v:[120,240],r:'$\\cos x^\\circ=-\\dfrac{1}{2}$\ncos is negative: 2nd and 3rd quadrants\n$x=180-60=120$ or $x=180+60=240$'},
+    'tan1':{v:[45,225],r:'$\\tan x^\\circ=1$\ntan is positive: 1st and 3rd quadrants\n$x=45$ or $x=180+45=225$'},
+    'tan-1':{v:[135,315],r:'$\\tan x^\\circ=-1$\ntan is negative: 2nd and 4th quadrants\n$x=180-45=135$ or $x=360-45=315$'},
+  };
+  const info=R[type+sign];
+  const c = type==='tan' ? k/2 : k/2;
+  const eq = type==='tan'
+    ? `${k/2}\\tan x^\\circ ${sign===1?'-':'+'} ${k/2}`
+    : `${k}\\${type} x^\\circ ${sign===1?'-':'+'} ${k/2}`;
+  const step1 = type==='tan'
+    ? `$${eq} = 0$\n$${k/2}\\tan x^\\circ = ${sign===1?'':'-'}${k/2}$`
+    : `$${eq} = 0$\n$${k}\\${type} x^\\circ = ${sign===1?'':'-'}${k/2}$`;
+  return {topic:'trigonometry',difficulty:2,marks:3,
+    _answer:{type:'angles',values:info.v},
+    question:`Solve $${eq} = 0$ for $0 \\le x < 360$.`,
+    solution:`${step1}\n${info.r}`,
+    hint:`Rearrange to get $\\${type} x^\\circ$ on its own, then use the quadrants (CAST) to find both solutions.`};
+}
+
+function genTrigGraphAB(){
+  const f=choice(['sin','cos']);
+  const a=rand(2,7), b=rand(1,4);
+  const fn=x=>a*(f==='sin'?Math.sin(rad(b*x)):Math.cos(rad(b*x)));
+  const fig=graphSVG({fn,ymin:-a*1.3,ymax:a*1.3,yTicks:[a,0,-a]});
+  return {topic:'trigonometry',difficulty:2,marks:2,figure:fig,
+    _answer:{type:'pair',names:['a','b'],values:[a,b]},
+    question:`Part of the graph of $y = a\\${f}\\, bx^\\circ$ for $0 \\le x \\le 360$ is shown. State the values of $a$ and $b$.`,
+    solution:`The maximum value is ${a}, so the amplitude is $a = ${a}$.\nThe graph completes ${b} full cycle${b>1?'s':''} in 360°, so the period is $\\dfrac{360}{${b}} = ${360/b}^\\circ$.\nSo $b = ${b}$.`,
+    hint:`$a$ is the amplitude (the maximum height). $b$ is the number of complete waves between 0° and 360°.`};
+}
+
+function genTrigShift(){
+  const a=choice([-60,-45,-30,30,45,60]), b=choice([-1,1,2,3]);
+  const xm=((-a)%360+360)%360;
+  const fn=x=>Math.cos(rad(x+a))+b;
+  const lo=Math.min(0,b-1), hi=Math.max(0,b+1);
+  const ticks=[...new Set([b+1,b,b-1,0])];
+  const fig=graphSVG({fn,ymin:lo-0.5,ymax:hi+0.5,yTicks:ticks,pts:[{x:xm,y:b+1,label:`(${xm}, ${b+1})`}]});
+  return {topic:'trigonometry',difficulty:3,marks:2,figure:fig,
+    _answer:{type:'pair',names:['a','b'],values:[a,b]},
+    question:`Part of the graph of $y = \\cos(x + a)^\\circ + b$ is shown. State the values of $a$ and $b$.`,
+    solution:`The maximum of $y=\\cos x^\\circ$ is at $x=0$. Here the maximum is at $x=${xm}$, so the graph has moved ${xm<=180?xm+'° to the right':(360-xm)+'° to the left'}: $a = ${a}$.\nThe maximum value is ${b+1}, and normally it is 1, so the graph has moved ${b>=0?'up':'down'} ${Math.abs(b)}: $b = ${b}$.`,
+    hint:`Find where the maximum sits compared with $y=\\cos x^\\circ$ (maximum at $x=0$, value 1). The sideways shift gives $a$, the vertical shift gives $b$.`};
+}
+
+function genTrigTurning(){
+  const k=rand(2,5), p=choice([30,45,60]);
+  const opts=[
+    {f:'sin',kind:'maximum',x:90+p, y:k, lab:'A'},
+    {f:'sin',kind:'minimum',x:270+p,y:-k,lab:'B'},
+    {f:'cos',kind:'maximum',x:p,    y:k, lab:'A'},
+    {f:'cos',kind:'minimum',x:180+p,y:-k,lab:'B'},
+  ];
+  const o=choice(opts);
+  const fn=x=>k*(o.f==='sin'?Math.sin(rad(x-p)):Math.cos(rad(x-p)));
+  const fig=graphSVG({fn,ymin:-k*1.4,ymax:k*1.4,pts:[{x:o.x,y:o.y,label:o.lab}]});
+  const base = o.f==='sin' ? (o.kind==='maximum'?90:270) : (o.kind==='maximum'?0:180);
+  return {topic:'trigonometry',difficulty:2,marks:2,figure:fig,
+    _answer:{type:'point',x:o.x,y:o.y},
+    question:`Part of the graph of $y = ${k}\\${o.f}(x - ${p})^\\circ$ is shown. The graph has a ${o.kind} turning point at ${o.lab}. State the coordinates of ${o.lab}.`,
+    solution:`The graph of $y=\\${o.f} x^\\circ$ has its ${o.kind} at $x=${base}$. Moving ${p}° right gives $x=${base}+${p}=${o.x}$.\nThe amplitude is ${k}, so $y=${o.y}$.\nCoordinates: $(${o.x},\\, ${o.y})$`,
+    hint:`Start with where $y=\\${o.f} x^\\circ$ has its ${o.kind}, then shift it ${p}° to the right.`};
+}
+
+function genTrigCosSide(){
+  let a,b,n,d,sg,c2,term,found=false;
+  for(let i=0;i<600 && !found;i++){
+    a=rand(3,10); b=rand(3,10);
+    d=choice([2,3,4,5,6,8,10]); n=rand(1,d-1); sg=Math.random()<0.8?1:-1;
+    const t2=2*a*b*n;
+    if(t2%d!==0) continue;
+    term=sg*t2/d;
+    c2=a*a+b*b-term;
+    const c=Math.round(Math.sqrt(c2));
+    if(c>0 && c*c===c2 && gcd(n,d)===1) found=true;
+  }
+  if(!found){ a=5;b=6;n=1;d=5;sg=1;term=12;c2=49; }
+  const c=Math.round(Math.sqrt(c2));
+  const cosv=sg*n/d, sinv=Math.sqrt(1-cosv*cosv);
+  const V=[{x:0,y:0,l:'C'},{x:a,y:0,l:'B'},{x:b*cosv,y:-b*sinv,l:'A'}];
+  const fig=triSVG(V,[{i:0,j:1,t:`${a} m`},{i:0,j:2,t:`${b} m`}]);
+  const cosTxt=`${sg<0?'-':''}\\dfrac{${n}}{${d}}`;
+  return {topic:'trigonometry',difficulty:3,marks:3,figure:fig,
+    _answer:{type:'number',value:c},
+    question:`In triangle ABC, $AC = ${b}$ metres, $BC = ${a}$ metres and $\\cos C = ${cosTxt}$. Calculate the length of AB.`,
+    solution:`Use the cosine rule:\n$AB^2 = AC^2 + BC^2 - 2(AC)(BC)\\cos C$\n$AB^2 = ${b}^2 + ${a}^2 - 2(${b})(${a})\\left(${cosTxt}\\right)$\n$AB^2 = ${b*b} + ${a*a} ${term>=0?'- '+term:'+ '+Math.abs(term)} = ${c2}$\n$AB = \\sqrt{${c2}} = ${c}$ metres`,
+    hint:`You know two sides and the angle between them, so use $a^2=b^2+c^2-2bc\\cos A$. Work out the $2bc\\cos A$ part first.`};
+}
+
+function genTrigCosAngle(){
+  let a,b,c,num,den,g,found=false;
+  for(let i=0;i<600 && !found;i++){
+    a=rand(3,9); b=rand(3,9); c=rand(3,9);
+    if(!(a+c>b && a+b>c && b+c>a)) continue;
+    if(a===b||b===c||a===c) continue;
+    num=a*a+c*c-b*b; den=2*a*c;
+    if(num===0) continue;
+    g=gcd(Math.abs(num),den);
+    found=true;
+  }
+  const sn=num/g, sd=den/g;
+  const cosB=`${sn<0?'-':''}\\dfrac{${Math.abs(sn)}}{${sd}}`;
+  // B at origin, BC along x-axis
+  const Ax=(a*a+c*c-b*b)/(2*a), Ay=-Math.sqrt(Math.max(c*c-Ax*Ax,0.01));
+  const V=[{x:0,y:0,l:'B'},{x:a,y:0,l:'C'},{x:Ax,y:Ay,l:'A'}];
+  const fig=triSVG(V,[{i:0,j:1,t:`${a} cm`},{i:1,j:2,t:`${b} cm`},{i:0,j:2,t:`${c} cm`}]);
+  return {topic:'trigonometry',difficulty:2,marks:2,figure:fig,
+    _answer:{type:'fraction',n:sn,d:sd},
+    question:`The diagram shows triangle ABC with $AB = ${c}$ cm, $BC = ${a}$ cm and $AC = ${b}$ cm. Calculate the value of $\\cos B$. Give your answer in its simplest form.`,
+    solution:`Use the cosine rule rearranged:\n$\\cos B = \\dfrac{AB^2 + BC^2 - AC^2}{2(AB)(BC)}$\n$\\cos B = \\dfrac{${c}^2 + ${a}^2 - ${b}^2}{2(${c})(${a})} = \\dfrac{${num}}{${den}}$\nSimplify: $\\cos B = ${cosB}$`,
+    hint:`Angle B is opposite side AC. Use $\\cos B=\\dfrac{a^2+c^2-b^2}{2ac}$ with the sides next to B on top.`};
+}
+
+function genTrigArea(){
+  const S=[[1,2],[1,3],[2,3],[3,4],[1,4],[3,5],[4,5],[2,5],[1,5]];
+  let a,b,p,q,area,found=false;
+  for(let i=0;i<600 && !found;i++){
+    a=rand(3,12); b=rand(3,12); [p,q]=choice(S);
+    if((a*b*p)%(2*q)===0){ area=a*b*p/(2*q); found=true; }
+  }
+  const sinv=p/q, cosv=Math.sqrt(1-sinv*sinv);
+  const V=[{x:0,y:0,l:'B'},{x:b,y:0,l:'C'},{x:a*cosv,y:-a*sinv,l:'A'}];
+  const fig=triSVG(V,[{i:0,j:1,t:`${b} cm`},{i:0,j:2,t:`${a} cm`}]);
+  return {topic:'trigonometry',difficulty:2,marks:2,figure:fig,
+    _answer:{type:'number',value:area},
+    question:`In triangle ABC, $AB = ${a}$ cm, $BC = ${b}$ cm and $\\sin B = \\dfrac{${p}}{${q}}$. Calculate the area of the triangle.`,
+    solution:`Use the area formula $A=\\dfrac{1}{2}ab\\sin C$:\n$A = \\dfrac{1}{2}(${a})(${b})\\left(\\dfrac{${p}}{${q}}\\right)$\n$A = ${area}$ cm²`,
+    hint:`Use $A=\\dfrac{1}{2}ab\\sin C$ with the two sides either side of the angle. You don't need a calculator.`};
+}
+
 const GENERATORS = [
   genFractions, genFractions,
   genSurdsSimplify, genSurdsRationalise, genIndices,
@@ -548,6 +749,8 @@ const GENERATORS = [
   genVectors, genVolume,
   genFunctions, genAlgebra,
   genInequations, genStatistics,
+  genTrigRelated, genTrigEquation, genTrigGraphAB, genTrigShift,
+  genTrigTurning, genTrigCosSide, genTrigCosAngle, genTrigArea,
 ];
 
 function generateQuestion(topic=null){
@@ -566,6 +769,7 @@ function generateQuestion(topic=null){
       algebra_expressions:[genAlgebra],
       inequations:[genInequations],
       statistics:[genStatistics],
+      trigonometry:[genTrigRelated,genTrigEquation,genTrigGraphAB,genTrigShift,genTrigTurning,genTrigCosSide,genTrigCosAngle,genTrigArea],
     };
     fns = topicMap[topic] || GENERATORS;
   }
@@ -629,6 +833,7 @@ function renderQuiz(){
       </div>
       <div class="qcard">
         <div class="qtext" id="qtext"></div>
+        ${q.figure?`<div class="qfig">${q.figure}</div>`:''}
         ${!feedback && q.hint ? (showHint
           ? `<div class="hintbox" id="hintbox"></div>`
           : `<button class="btn-ghost" onclick="revealHint()">Show hint</button>`)
@@ -713,8 +918,34 @@ function checkAnswer(q, raw){
   // ── Single number ───────────────────────────────────────────────────────────
   if(a.type==='number'){
     const tol=a.tolerance||0.05;
+    const t=ans.replace(/-\s+(?=\d)/g,'-');
+    const nums=parseNumbers(t);
+    if(nums.some(n=>Math.abs(n-a.value)<=tol)) return true;
+    const fm=t.match(/(-?\d+)\s*\/\s*(\d+)/);   // allow typed fractions like -1/2
+    return !!fm && Math.abs(parseInt(fm[1])/parseInt(fm[2])-a.value)<=tol;
+  }
+
+  // ── Named pair  e.g. "a = 3, b = 2" or "3, 2" ───────────────────────────────
+  if(a.type==='pair'){
+    const t=ans.replace(/-\s+(?=\d)/g,'-');
+    const [n1,n2]=a.names, [v1,v2]=a.values;
+    const m1=t.match(new RegExp(n1+'\\s*=\\s*(-?\\d+\\.?\\d*)'));
+    const m2=t.match(new RegExp(n2+'\\s*=\\s*(-?\\d+\\.?\\d*)'));
+    if(m1&&m2) return parseFloat(m1[1])===v1 && parseFloat(m2[1])===v2;
+    const nums=parseNumbers(t);
+    return nums.length>=2 && nums[0]===v1 && nums[1]===v2;
+  }
+
+  // ── Coordinates  e.g. "(120, 2)" ────────────────────────────────────────────
+  if(a.type==='point'){
+    const nums=parseNumbers(ans.replace(/-\s+(?=\d)/g,'-'));
+    return nums.length>=2 && Math.abs(nums[0]-a.x)<0.01 && Math.abs(nums[1]-a.y)<0.01;
+  }
+
+  // ── Several angles  e.g. "30, 150" ──────────────────────────────────────────
+  if(a.type==='angles'){
     const nums=parseNumbers(ans);
-    return nums.some(n=>Math.abs(n-a.value)<=tol);
+    return a.values.every(v=>nums.some(n=>Math.abs(n-v)<0.01));
   }
 
   // ── Fraction  e.g. "3/4", "3 over 4", "0.75" ───────────────────────────────
@@ -921,6 +1152,9 @@ function answerPlaceholder(q){
     quadratic:    'e.g. 2x² + 3x - 4',
     factors:      'e.g. (x + 3)(x - 2)',
     inequation:   'e.g. x > 3',
+    pair:         'e.g. a = 3, b = 2',
+    point:        'e.g. (120, 2)',
+    angles:       'e.g. 30, 150',
   };
   return hints[a.type]||'Type your answer…';
 }
